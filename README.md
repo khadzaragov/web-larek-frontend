@@ -128,7 +128,8 @@ onRemoveItem(callback: (id: string) => void): void
 onSubmit(callback: () => void): void
 ```
 
-> Класс получает готовые DOM-элементы карточек и вставляет их в контейнер. Сам шаблон карточки в корзине передаётся через `ProductCardView`.
+> Класс получает массив готовых HTML-элементов карточек и вставляет его в контейнер с помощью метода `replaceChildren`. Экземпляры карточек не создаются внутри и не передаются в методы. Это делает `CartView` независимым от структуры карточек.
+> Массив карточек в корзине формируется на основе состояния `CartModel`, который обновляется при добавлении или удалении товаров. Карточки создаются отдельно и передаются в `CartView` для отображения.
 
 #### `OrderFormView`
 
@@ -158,7 +159,8 @@ updateCartCounter(count: number): void
 onCartClick(callback: () => void): void
 ```
 
-> Класс получает готовые карточки от `ProductCardView` и вставляет их в контейнер каталога. Не зависит от структуры карточки.
+> Класс получает массив готовых HTML-элементов карточек от логики (например, от контроллера) и вставляет его в разметку. Внутри `MainPageView` карточки не создаются и не обрабатываются — это делает его универсальным и независимым от конкретной структуры карточки.
+> Карточки для главной страницы создаются из массива данных, полученного от API. Формирование DOM-элементов происходит в логике (например, в контроллере) через `map`, и результат передаётся в `MainPageView`.
 
 ---
 
@@ -261,3 +263,64 @@ eventBus.on('product:open', this.handleProductClick)
 - `IApiClient` — методы API
 - `IProductCardView` — отображение карточек
 - `IEventPayload` — структура событий
+
+---
+
+## Список событий и структура данных
+
+| Событие         | Отправитель        | Получатель       | Данные                               |
+|-----------------|--------------------|------------------|--------------------------------------|
+| `product:open`  | ProductCardView    | AppController    | `{ id: string }`                     |
+| `cart:add`      | ProductCardView    | AppController    | `{ product: Product }`              |
+| `cart:remove`   | CartView           | AppController    | `{ id: string }`                     |
+| `cart:changed`  | CartModel          | MainPageView, CartView | `{ items: Product[] }`        |
+| `order:submit`  | OrderFormView      | AppController    | `{ form: OrderForm }`               |
+
+---
+
+## Пример сценария: добавление товара в корзину
+
+1. Пользователь нажимает кнопку «Купить» в карточке товара.
+2. `ProductCardView` вызывает:
+
+   ```ts
+   eventBus.emit('cart:add', { product });
+   ```
+
+3. `AppController` получает событие, вызывает:
+
+   ```ts
+   cartModel.addItem(product);
+   ```
+
+4. `CartModel` обновляет данные и вызывает:
+
+   ```ts
+   eventBus.emit('cart:changed', { items: cartModel.items });
+   ```
+
+5. `CartView` подписан на `cart:changed`, получает новые карточки и обновляет отображение.
+
+---
+
+## Используемые HTML-шаблоны
+
+| ID шаблона             | Назначение                                | Используется в классе         |
+|------------------------|--------------------------------------------|-------------------------------|
+| `card-catalog`         | Карточка в каталоге                       | `ProductCardView`             |
+| `card-cart`            | Карточка в корзине                        | `ProductCardView`             |
+| `card-preview`         | Карточка в модальном окне                 | `ProductCardView`             |
+| `order-form-step1`     | Форма: способ оплаты и адрес              | `OrderFormView`               |
+| `order-form-step2`     | Форма: контакты                           | `OrderFormView`               |
+
+---
+
+## План реализации
+
+1. Реализовать модели: `CartModel`, `OrderModel`
+2. Реализовать компонент `ProductCardView`, рендерящий карточку по шаблону
+3. Настроить `Api` и загрузку товаров с сервера
+4. Создать `AppController`, связать его с `EventEmitter`
+5. Подключить `MainPageView`, `ModalView`, `CartView`, `OrderFormView`
+6. Реализовать генерацию карточек через `map` по данным
+7. Обработать пользовательские действия и переходы между шагами заказа
