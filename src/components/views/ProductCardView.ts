@@ -32,6 +32,7 @@ export class ProductCardView {
       button.addEventListener('click', (e) => {
         e.stopPropagation();
         this.bus.emit('cart:add', { product });
+        this.bus.emit('modal:close');
       });
     }
     return this.element;

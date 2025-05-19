@@ -51,6 +51,9 @@ export class AppController {
 
     this.bus.on('modal:close', () => this.modalView.close());
 
+    // Рендерим корзину для корректного состояния кнопки "Оформить"
+    this.cartView.render(this.cartModel.items);
+
     this.loadCatalog();
   }
 
