@@ -2,8 +2,14 @@ import { EventEmitter } from './base/events';
 import { ApiClient } from './ApiClient';
 import { CartModel } from '../models/CartModel';
 import { OrderModel } from '../models/OrderModel';
-import { MainPageView, ModalView, ProductCardView, CartView, OrderFormView } from './views';
-import { Product } from '../types';
+import {
+  MainPageView,
+  ModalView,
+  ProductCardView,
+  CartView,
+  OrderFormView,
+} from './views';
+import { Product, ICartItem } from '../types';
 
 export class AppController {
   constructor(
@@ -18,15 +24,24 @@ export class AppController {
   ) {}
 
   init(): void {
-    this.bus.on('product:open', ({ id }) => this.handleProductClick(id));
-    this.bus.on('cart:add', ({ product }) => this.cartModel.addItem(product));
-    this.bus.on('cart:remove', ({ id }) => this.cartModel.removeItem(id));
-    this.bus.on('cart:changed', ({ items }) => {
+    this.bus.on<{ id: string }>('product:open', ({ id }) =>
+      this.handleProductClick(id)
+    );
+    this.bus.on<{ product: Product }>('cart:add', ({ product }) =>
+      this.cartModel.addItem(product)
+    );
+    this.bus.on<{ id: string }>('cart:remove', ({ id }) =>
+      this.cartModel.removeItem(id)
+    );
+    this.bus.on<{ items: ICartItem[] }>('cart:changed', ({ items }) => {
       this.mainView.updateCartCounter(items.length);
       this.cartView.render(items);
     });
     this.bus.on('order:submit', () => this.handleOrderSubmit());
     this.bus.on('modal:close', () => this.modalView.close());
+    this.bus.on('cart:open', () => this.handleCartOpen());
+    this.bus.on('order:step1', () => this.handleOrderStep1());
+    this.bus.on('order:step2', () => this.handleOrderStep2());
     this.loadCatalog();
   }
 
@@ -47,6 +62,35 @@ export class AppController {
     const view = new ProductCardView(tpl, this.bus);
     this.modalView.render(view.render(product));
     this.modalView.open();
+  }
+
+  private handleCartOpen() {
+    this.modalView.render(this.cartView.element);
+    this.modalView.open();
+  }
+
+  private handleOrderStep1() {
+    const data = this.orderView.getStep1Data();
+    this.orderModel.payment = data.payment;
+    this.orderModel.address = data.address;
+
+    if (this.orderModel.isValidStep1()) {
+      this.orderView.renderStep2();
+    } else {
+      this.orderView.showErrors(['Заполните адрес доставки']);
+    }
+  }
+
+  private handleOrderStep2() {
+    const data = this.orderView.getStep2Data();
+    this.orderModel.email = data.email;
+    this.orderModel.phone = data.phone;
+
+    if (this.orderModel.isValidStep2()) {
+      this.handleOrderSubmit();
+    } else {
+      this.orderView.showErrors(['Заполните контактные данные']);
+    }
   }
 
   private handleOrderSubmit() {

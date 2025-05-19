@@ -15,7 +15,7 @@ export class CartView {
     const root = cloneTemplate<HTMLElement>(template);
     this.list = ensureElement('.basket__list', root);
     this.price = ensureElement('.basket__price', root);
-    this.button = ensureElement('.basket__button', root);
+    this.button = ensureElement<HTMLButtonElement>('.basket__button', root);
 
     this.button.addEventListener('click', () =>
       this.bus.emit('order:submit')

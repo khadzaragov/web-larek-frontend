@@ -11,7 +11,7 @@ const bus = new EventEmitter();
 const api = new ApiClient(API_URL);
 
 const cartModel = new CartModel(bus);
-const orderModel = new OrderModel(bus);
+const orderModel = new OrderModel();
 
 const mainView = new MainPageView(
   document.querySelector('.gallery') as HTMLElement,

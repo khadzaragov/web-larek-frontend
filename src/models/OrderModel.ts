@@ -1,4 +1,3 @@
-import { EventEmitter } from '../components/base/events';
 import { OrderForm } from '../types';
 
 export class OrderModel {
@@ -6,8 +5,6 @@ export class OrderModel {
   address = '';
   email = '';
   phone = '';
-
-  constructor(private bus: EventEmitter) {}
 
   isValidStep1(): boolean {
     return this.address.trim() !== '';
