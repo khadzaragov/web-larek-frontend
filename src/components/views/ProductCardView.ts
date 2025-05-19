@@ -14,7 +14,7 @@ export class ProductCardView {
     this.element = cloneTemplate<HTMLElement>(this.template);
     ensureElement('.card__title', this.element).textContent = product.title;
     ensureElement('.card__price', this.element).textContent =
-      `${product.price} синапсов`;
+      product.price != null ? `${product.price} синапсов` : 'Бесценно';
     ensureElement<HTMLImageElement>(
     '.card__image',
     this.element

@@ -75,7 +75,7 @@ items: ICartItem[]
 addItem(product: Product): void
 removeItem(productId: string): void
 clear(): void
-getTotal(): number
+getTotalPrice(): number
 ```
 
 #### `OrderModel`
@@ -120,7 +120,6 @@ constructor(container: HTMLElement)
 render(content: HTMLElement): void
 open(): void
 close(): void
-onClose(callback: () => void): void
 ```
 
 > Использует элемент с id `modal-container`, в который вставляется разный контент — карточка товара, корзина, форма оформления, окно с сообщением. Контент передаётся через метод `render()`.
@@ -136,7 +135,7 @@ onRemoveItem(callback: (id: string) => void): void
 onSubmit(callback: () => void): void
 ```
 
-> Класс получает массив готовых HTML-элементов карточек и вставляет его в контейнер с помощью метода `replaceChildren`. Экземпляры карточек не создаются внутри и не передаются в методы. Это делает `CartView` независимым от структуры карточек.
+> Класс сам клонирует шаблон карточки из HTML, заполняет его и вставляет в контейнер. Он не принимает готовые DOM-элементы, а создаёт их на основе переданных данных (ICartItem[]).
 > Массив карточек в корзине формируется на основе состояния `CartModel`, который обновляется при добавлении или удалении товаров. Карточки создаются отдельно и передаются в `CartView` для отображения.
 
 #### `OrderFormView`
@@ -164,7 +163,6 @@ showErrors(errors: string[]): void
 constructor(root: HTMLElement)
 renderCatalog(cards: HTMLElement[]): void
 updateCartCounter(count: number): void
-onCartClick(callback: () => void): void
 ```
 
 > Класс получает массив готовых HTML-элементов карточек от логики (например, от контроллера) и вставляет его в разметку. Внутри `MainPageView` карточки не создаются и не обрабатываются — это делает его универсальным и независимым от конкретной структуры карточки.
@@ -215,6 +213,8 @@ eventBus.on('product:open', this.handleProductClick)
 | `cart:changed`  | Обновить отображение корзины        |
 | `order:submit`  | Отправить заказ                     |
 | `modal:close`   | Закрыть модальное окно              |
+| `order:step1`   | Перейти к шагу с адресом            |
+| `order:step2`   | Перейти к шагу с контактами         |
 
 ---
 
@@ -300,10 +300,10 @@ eventBus.on('product:open', this.handleProductClick)
 | ID шаблона             | Назначение                                | Используется в классе         |
 |------------------------|--------------------------------------------|-------------------------------|
 | `card-catalog`         | Карточка в каталоге                       | `ProductCardView`             |
-| `card-cart`            | Карточка в корзине                        | `ProductCardView`             |
+| `card-basket`            | Карточка в корзине                        | `ProductCardView`             |
 | `card-preview`         | Карточка в модальном окне                 | `ProductCardView`             |
-| `order-form-step1`     | Форма: способ оплаты и адрес              | `OrderFormView`               |
-| `order-form-step2`     | Форма: контакты                           | `OrderFormView`               |
+| `order`     | Форма: способ оплаты и адрес              | `OrderFormView`               |
+| `contacts`     | Форма: контакты                           | `OrderFormView`               |
 
 ---
 
