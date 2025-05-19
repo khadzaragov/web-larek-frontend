@@ -16,9 +16,10 @@ export class ProductCardView {
     ensureElement('.card__price', this.element).textContent =
       `${product.price} синапсов`;
     ensureElement<HTMLImageElement>(
-      '.card__image',
-      this.element
-    ).src = product.image;
+    '.card__image',
+    this.element
+    ).src = `https://larek-api.nomoreparties.co/content/weblarek/${product.image}`;
+
 
     this.element.addEventListener('click', () =>
       this.bus.emit('product:open', { id: product.id })

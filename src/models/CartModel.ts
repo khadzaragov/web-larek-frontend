@@ -1,35 +1,32 @@
-import { ICartItem, Product } from '../types';
+import { Product, ICartItem } from '../types';
 import { EventEmitter } from '../components/base/events';
 
 export class CartModel {
   public items: ICartItem[] = [];
 
-  constructor(private bus: EventEmitter) {}
+  constructor(private events: EventEmitter) {}
 
   addItem(product: Product): void {
-    const item = this.items.find((i) => i.product.id === product.id);
-    if (item) {
-      item.quantity += 1;
+    const existing = this.items.find((item) => item.product.id === product.id);
+    if (existing) {
+      existing.quantity += 1;
     } else {
       this.items.push({ product, quantity: 1 });
     }
-    this.bus.emit('cart:changed', { items: this.items });
+    this.events.emit('cart:changed', { items: this.items });
   }
 
   removeItem(productId: string): void {
-    this.items = this.items.filter((i) => i.product.id !== productId);
-    this.bus.emit('cart:changed', { items: this.items });
+    this.items = this.items.filter((item) => item.product.id !== productId);
+    this.events.emit('cart:changed', { items: this.items });
   }
 
   clear(): void {
     this.items = [];
-    this.bus.emit('cart:changed', { items: this.items });
+    this.events.emit('cart:changed', { items: this.items });
   }
 
-  getTotalPrice(): number {
-    return this.items.reduce(
-      (sum, i) => sum + i.product.price * i.quantity,
-      0
-    );
+  getTotal(): number {
+    return this.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }
 }
