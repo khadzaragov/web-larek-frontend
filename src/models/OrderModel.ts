@@ -20,7 +20,7 @@ export class OrderModel {
       address: this.address,
       email: this.email,
       phone: this.phone,
-      items: []        // заполняется контроллером
+      items: []
     };
   }
 }

@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
   const contactsTemplate = document.getElementById('contacts') as HTMLTemplateElement;
 
-  // Проверка, чтобы исключить null (не обязательно, но полезно)
+  // Проверка, чтобы исключить null
   if (!cartTemplate || !cartItemTemplate || !orderTemplate || !contactsTemplate) {
     throw new Error('Один из шаблонов не найден в HTML!');
   }
@@ -54,6 +54,33 @@ document.addEventListener('DOMContentLoaded', () => {
     api,
     bus
   );
+
+  bus.on('order:submit', () => {
+  const successTemplate = document.getElementById('success') as HTMLTemplateElement;
+  if (!successTemplate) {
+    throw new Error('Шаблон успеха не найден!');
+  }
+
+  const successContent = successTemplate.content.cloneNode(true) as HTMLElement;
+
+  // Подставляем сумму
+  const total = cartModel.getTotal();
+  const descriptionEl = successContent.querySelector('.order-success__description');
+  if (descriptionEl) {
+    descriptionEl.textContent = `Списано ${total} синапсов`;
+  }
+
+  // Навешиваем обработчик ДО отрисовки в модалке
+  const closeButton = successContent.querySelector('.order-success__close');
+  closeButton?.addEventListener('click', () => {
+  modalView.close();
+  cartModel.clear();
+  bus.emit('cart:changed', { items: cartModel.items }); // передаём данные
+  });
+
+  modalView.render(successContent);
+  modalView.open();
+});
 
   controller.init();
 });

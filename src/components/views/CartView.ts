@@ -53,7 +53,6 @@ export class CartView {
   );
   this.price.textContent = `${total} синапсов`;
 
-  // 🔒 Делаем кнопку "Оформить" неактивной, если корзина пуста
   this.button.disabled = items.length === 0;
 
   return this.element;
