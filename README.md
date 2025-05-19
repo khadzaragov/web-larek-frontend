@@ -164,27 +164,17 @@ onCartClick(callback: () => void): void
 
 ---
 
-### Presenter (Controller)
+### Организация логики в проекте
 
-#### `AppController`
+Приложение построено без отдельного класса `AppController`. Вместо этого, связывание компонентов, подписка на события и вызов методов моделей реализованы в модуле `index.ts` — точке входа проекта.
 
-Связывает модели и представления, управляет логикой приложения. Подписывается на события от View и вызывает действия в моделях.
+Это позволяет:
 
-```ts
-constructor(
-  mainView: MainPageView,
-  modalView: ModalView,
-  cartModel: CartModel,
-  orderModel: OrderModel,
-  api: IApiClient,
-  eventBus: EventEmitter
-)
-init(): void
-handleProductClick(id: string): void
-handleAddToCart(product: Product): void
-handleRemoveFromCart(id: string): void
-handleOrderSubmit(): void
-```
+- избежать дублирования полей и методов
+- сохранить слабую связанность между компонентами
+- соблюдать принципы ООП (каждый класс отвечает только за своё)
+
+Именно в `index.ts` создаются экземпляры всех классов с помощью `new`, и настраиваются все взаимодействия.
 
 ---
 
