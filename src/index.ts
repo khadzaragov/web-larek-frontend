@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bus
   );
 
-  bus.on('order:submit', () => {
+  bus.on<{ total: number }>('order:submit', ({ total }) => {
     const successTemplate = document.getElementById('success') as HTMLTemplateElement;
     if (!successTemplate) {
       throw new Error('Шаблон успеха не найден!');
@@ -53,8 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const successContent = successTemplate.content.cloneNode(true) as HTMLElement;
 
-    // Подставляем сумму
-    const total = cartModel.getTotalPrice();
     const descriptionEl = successContent.querySelector('.order-success__description');
     if (descriptionEl) {
       descriptionEl.textContent = `Списано ${total} синапсов`;
@@ -63,8 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeButton = successContent.querySelector('.order-success__close');
     closeButton?.addEventListener('click', () => {
       modalView.close();
-      cartModel.clear();
-      bus.emit('cart:changed', { items: cartModel.items });
     });
 
     modalView.render(successContent);

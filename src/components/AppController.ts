@@ -124,17 +124,19 @@ export class AppController {
 
   private handleOrderSubmit() {
   const order = this.orderModel.getData();
-  order.items = this.cartModel.items.map((i) => i.product.id);
+    order.items = this.cartModel.items.map((i) => i.product.id);
 
-  const total = this.cartModel.getTotalPrice();
-  const fullOrder = { ...order, total };
+    const total = this.cartModel.getTotalPrice();
+    const fullOrder = { ...order, total };
 
-  this.api.postOrder(fullOrder)
-    .then(() => {
-      this.bus.emit('order:submit');
-    })
-    .catch((error) => {
-      console.error('Ошибка при отправке заказа:', error);
+    this.api
+      .postOrder(fullOrder)
+      .then(() => {
+        this.cartModel.clear();
+        this.bus.emit('order:submit', { total });
+      })
+      .catch((error) => {
+        console.error('Ошибка при отправке заказа:', error);
     });
   }
 
