@@ -70,7 +70,7 @@ export class OrderFormView {
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      this.bus.emit('order:submit');
+      this.bus.emit('order:step2');
     });
   }
 

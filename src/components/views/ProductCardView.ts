@@ -1,6 +1,15 @@
 import { Product } from '../../types';
-import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { cloneTemplate } from '../../utils/utils';
 import { EventEmitter } from '../base/events';
+
+// Сопоставление текстовых категорий с CSS-классами
+const CATEGORY_CLASS_MAP: Record<string, string> = {
+  'софт-скил': 'soft',
+  'хард-скил': 'hard',
+  'другое': 'other',
+  'дополнительное': 'additional',
+  'кнопка': 'button'
+};
 
 export class ProductCardView {
   private element!: HTMLElement;
@@ -12,29 +21,60 @@ export class ProductCardView {
 
   render(product: Product): HTMLElement {
     this.element = cloneTemplate<HTMLElement>(this.template);
-    ensureElement('.card__title', this.element).textContent = product.title;
-    ensureElement('.card__price', this.element).textContent =
-      product.price != null ? `${product.price} синапсов` : 'Бесценно';
-    ensureElement<HTMLImageElement>(
-    '.card__image',
-    this.element
-    ).src = `https://larek-api.nomoreparties.co/content/weblarek/${product.image}`;
 
+    // Название
+    const title = this.element.querySelector('.card__title');
+    if (title) title.textContent = product.title;
 
+    // Цена
+    const price = this.element.querySelector('.card__price');
+    if (price) {
+      price.textContent = product.price != null ? `${product.price} синапсов` : 'Бесценно';
+    }
+
+    // Картинка
+    const image = this.element.querySelector<HTMLImageElement>('.card__image');
+    if (image && product.image) {
+      image.src = `https://larek-api.nomoreparties.co/content/weblarek/${product.image}`;
+    }
+
+    // Описание
+    const description = this.element.querySelector('.card__text');
+    if (description && product.description) {
+      description.textContent = product.description;
+    }
+
+    // Категория + цвет
+    const category = this.element.querySelector('.card__category');
+    if (category && product.category) {
+      category.textContent = product.category;
+
+      const normalized = product.category.toLowerCase().trim();
+      const classKey = CATEGORY_CLASS_MAP[normalized];
+      if (classKey) {
+        category.classList.add(`card__category_${classKey}`);
+      }
+    }
+
+    // Открытие карточки
     this.element.addEventListener('click', () =>
       this.bus.emit('product:open', { id: product.id })
     );
 
-    const button = this.element.querySelector(
-      '.card__button'
-    ) as HTMLButtonElement | null;
+    // Кнопка "В корзину"
+    const button = this.element.querySelector('.card__button') as HTMLButtonElement | null;
     if (button) {
-      button.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.bus.emit('cart:add', { product });
-        this.bus.emit('modal:close');
-      });
+      if (product.price == null) {
+        button.disabled = true; // блокируем кнопку
+      } else {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.bus.emit('cart:add', { product });
+          this.bus.emit('modal:close');
+        });
+      }
     }
+
     return this.element;
   }
 

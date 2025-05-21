@@ -26,7 +26,7 @@ export class CartModel {
     this.events.emit('cart:changed', { items: this.items });
   }
 
-  getTotal(): number {
+  getTotalPrice(): number {
     return this.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }
 }

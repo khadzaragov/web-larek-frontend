@@ -9,9 +9,11 @@ import {
   CartView,
   OrderFormView,
 } from './views';
-import { Product, ICartItem } from '../types';
+import { Product } from '../types';
 
 export class AppController {
+  private products: Product[] = [];
+
   constructor(
     private mainView: MainPageView,
     private modalView: ModalView,
@@ -27,15 +29,18 @@ export class AppController {
     this.bus.on<{ id: string }>('product:open', ({ id }) =>
       this.handleProductClick(id)
     );
+
     this.bus.on<{ product: Product }>('cart:add', ({ product }) =>
       this.cartModel.addItem(product)
     );
+
     this.bus.on<{ id: string }>('cart:remove', ({ id }) =>
       this.cartModel.removeItem(id)
     );
-    this.bus.on<{ items: ICartItem[] }>('cart:changed', ({ items }) => {
-      this.mainView.updateCartCounter(items.length);
-      this.cartView.render(items);
+
+    this.bus.on('cart:changed', () => {
+      this.mainView.updateCartCounter(this.cartModel.items.length);
+      this.updateCartView();
     });
 
     this.bus.on('cart:open', () => this.handleCartOpen());
@@ -48,25 +53,34 @@ export class AppController {
 
     this.bus.on('modal:close', () => this.modalView.close());
 
-    // Рендерим корзину для корректного состояния кнопки "Оформить"
-    this.cartView.render(this.cartModel.items);
-
+    this.updateCartView();
     this.loadCatalog();
   }
 
   private async loadCatalog() {
-    const products = await this.api.getProducts();
-    const cards = products.map((p) => {
-      const tpl = document.getElementById('card-catalog') as HTMLTemplateElement;
-      const view = new ProductCardView(tpl, this.bus);
-      return view.render(p);
-    });
-    this.mainView.renderCatalog(cards);
+    try {
+      const products = await this.api.getProducts();
+      this.products = products;
+
+      const cards = products.map((p) => {
+        const tpl = document.getElementById('card-catalog') as HTMLTemplateElement;
+        const view = new ProductCardView(tpl, this.bus);
+        return view.render(p);
+      });
+
+      this.mainView.renderCatalog(cards);
+    } catch (error) {
+      console.error('Ошибка при загрузке каталога:', error);
+    }
   }
 
   private async handleProductClick(id: string) {
-    const product = (await this.api.getProducts()).find((p) => p.id === id);
-    if (!product) return;
+    const product = this.products.find((p) => p.id === id);
+    if (!product) {
+      console.warn(`Товар с id "${id}" не найден в локальном списке.`);
+      return;
+    }
+
     const tpl = document.getElementById('card-preview') as HTMLTemplateElement;
     const view = new ProductCardView(tpl, this.bus);
     this.modalView.render(view.render(product));
@@ -78,7 +92,7 @@ export class AppController {
     this.modalView.open();
   }
 
-    private handleOrderStep1() {
+  private handleOrderStep1() {
     this.orderView.renderStep1();
     this.modalView.render(this.orderView.element);
     this.modalView.open();
@@ -109,11 +123,31 @@ export class AppController {
   }
 
   private handleOrderSubmit() {
-    const order = this.orderModel.getData();
-    order.items = this.cartModel.items.map((i) => i.product.id);
-    this.api.postOrder(order).then(() => {
-      this.cartModel.clear();
-      this.modalView.close();
+  const order = this.orderModel.getData();
+  order.items = this.cartModel.items.map((i) => i.product.id);
+
+  const total = this.cartModel.getTotalPrice();
+  const fullOrder = { ...order, total };
+
+  this.api.postOrder(fullOrder)
+    .then(() => {
+      this.bus.emit('order:submit');
+    })
+    .catch((error) => {
+      console.error('Ошибка при отправке заказа:', error);
     });
+  }
+
+  private updateCartView() {
+    const elements = this.cartModel.items.map((item, index) => {
+      const tpl = document.getElementById('card-basket') as HTMLTemplateElement;
+      const view = new ProductCardView(tpl, this.bus);
+      const card = view.render(item.product);
+      card.querySelector('.basket__item-index')!.textContent = String(index + 1);
+      return card;
+    });
+
+    const total = this.cartModel.getTotalPrice();
+    this.cartView.render(elements, total);
   }
 }
