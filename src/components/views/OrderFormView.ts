@@ -20,6 +20,7 @@ export class OrderFormView {
   renderStep1(): void {
     const form = cloneTemplate<HTMLFormElement>(this.step1Template);
     this.element.replaceChildren(form);
+    this.selectedPayment = undefined;
 
     const buttons = form.querySelectorAll<HTMLButtonElement>('.order__buttons .button');
     this.addressInput = form.querySelector('input[name="address"]') ?? undefined;
