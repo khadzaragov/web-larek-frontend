@@ -149,7 +149,6 @@ renderStep2(): void
 getStep1Data(): { payment: 'card' | 'cash'; address: string }
 getStep2Data(): { email: string; phone: string }
 onNext(callback: () => void): void
-onSubmit(callback: () => void): void
 showErrors(errors: string[]): void
 ```
 

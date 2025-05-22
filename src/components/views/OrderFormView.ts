@@ -115,14 +115,6 @@ export class OrderFormView {
     });
   }
 
-  // Обработка кнопки "Оплатить"
-  onSubmit(callback: () => void): void {
-    this.element.addEventListener('submit', (e) => {
-      e.preventDefault();
-      callback();
-    });
-  }
-
   showErrors(errors: string[]): void {
     const errBlock = this.element.querySelector('.form__errors');
     if (errBlock) {
