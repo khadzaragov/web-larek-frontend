@@ -52,7 +52,9 @@ export class ProductCardView {
       const normalized = product.category.toLowerCase().trim();
       const classKey = CATEGORY_CLASS_MAP[normalized];
       if (classKey) {
-        category.classList.add(`card__category_${classKey}`);
+        category.className = `card__category card__category_${classKey}`;
+      } else {
+        category.className = 'card__category';
       }
     }
 
@@ -61,17 +63,25 @@ export class ProductCardView {
       this.bus.emit('product:open', { id: product.id })
     );
 
-    // Кнопка "В корзину"
-    const button = this.element.querySelector('.card__button') as HTMLButtonElement | null;
-    if (button) {
-      if (product.price == null) {
-        button.disabled = true; // блокируем кнопку
-      } else {
-        button.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.bus.emit('cart:add', { product });
-          this.bus.emit('modal:close');
-        });
+    // Кнопка удаления из корзины или добавления в корзину
+    const deleteBtn = this.element.querySelector<HTMLButtonElement>('.basket__item-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.bus.emit('cart:remove', { id: product.id });
+      });
+    } else {
+      const button = this.element.querySelector('.card__button') as HTMLButtonElement | null;
+      if (button) {
+        if (product.price == null) {
+          button.disabled = true; // блокируем кнопку
+        } else {
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.bus.emit('cart:add', { product });
+            this.bus.emit('modal:close');
+          });
+        }
       }
     }
 
